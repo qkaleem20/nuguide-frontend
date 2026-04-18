@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* -- Reset -- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base */ 
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #080511;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Scroll Bar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+}
+
+/* Design Tokens */
+
+:root {
+  --bg-base: #0808511;
+  --bg-surface: #12091E;
+  --bg-card: #0F0820;
+  --purple-vivid:#7C3AED;
+  --purple-light:#9333EA;
+  --purple-muted:rgba(124, 58, 237, 0.15);
+  --purple-border:rgba(124, 58, 237, 0.25);
+  --gold:#D4A017;
+  --gold-light:#F5C518;
+  --text-primary:#FFFFFF;
+  --text-muted:rgba(255, 255, 255, 0.45);
+  --text-subtle:rgba(255, 255, 255, 0.25);
+  --border-dim:rgba(124, 58, 237, 0.15);
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Typogrophy Helpers */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Glow animation */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% {opacity: 1;}
+}
+
+/* Fade in animation */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease forwards;
+}
+
+/* card hover lif */
+@keyframes card-lift {
+  to {transform:translateY(-4px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
