@@ -1,4 +1,5 @@
 name: Azure Static Web Apps CI/CD
+
 on:
   push:
     branches:
@@ -7,26 +8,32 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+
 jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      # Updated to v4 for better performance and security
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: false
+
+      # Updated to v4 to fix the Node.js 20 deprecation warning
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install and Build
         run: |
           npm install
           npm run build
         env:
           NEXT_PUBLIC_API_URL: "https://nuchatbot.azurewebsites.net"
+
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -34,10 +41,20 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_RIVER_0A705300F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          
+          # app_location is where your package.json/next.config.mjs is located
+          app_location: "/" 
+          
+          # api_location is for Azure Functions; leave empty if not used
           api_location: ""
+          
+          # This MUST match the folder created by 'output: export' in next.config.mjs
           output_location: "out"
+          
+          # skip_app_build prevents Azure from trying to build it again 
+          # using its own default (and often outdated) methods.
           skip_app_build: true
+
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
