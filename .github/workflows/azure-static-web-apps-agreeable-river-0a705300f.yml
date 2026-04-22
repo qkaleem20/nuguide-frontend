@@ -43,13 +43,13 @@ jobs:
           action: "upload"
           
           # app_location is where your package.json/next.config.mjs is located
-          app_location: "/" 
+          app_location: "out"
           
           # api_location is for Azure Functions; leave empty if not used
           api_location: ""
           
           # This MUST match the folder created by 'output: export' in next.config.mjs
-          output_location: "out"
+          output_location: ""
           
           # skip_app_build prevents Azure from trying to build it again 
           # using its own default (and often outdated) methods.
