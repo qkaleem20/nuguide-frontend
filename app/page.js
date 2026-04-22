@@ -1,55 +1,26 @@
 'use client';
 
-// React hooks we need:
-// useState - stores data that can change (messages, loading state, etc.)
-// useEffect - runs code when the component first loads
-// useRef - references a DOM element directly (for auto-scrolling)
 import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/lib/useWindowSize';
-
-// Our data and API functions
 import { SESSION_ID, CATEGORY_CARDS, STARTER_QUESTIONS, QUICK_PROMPTS } from '@/lib/constants';
 import { sendMessage, clearSession } from '@/lib/api';
-
-// Components we'll build in upcoming steps
-// (these will cause errors until we create them — we fix that at the end)
 import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
 import ChatInput from '@/components/ChatInput';
 import StatusIndicator from '@/components/StatusIndicator';
 
 export default function Home() {
-
-  // ── State ──────────────────────────────────────────────────────
-  // messages: array of { role, content, sources, question }
-  // role is either 'user' or 'assistant'
-  const [messages, setMessages]     = useState([]);
-
-  // isLoading: true while waiting for FastAPI to respond
-  // used to show the typing indicator and disable the input
-  const [isLoading, setIsLoading]   = useState(false);
-
-  // sidebarOpen: controls whether the slide-in sidebar is visible
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // chatStarted: false = show welcome screen, true = show chat view
-  // switches to true the moment the first message is sent
   const [chatStarted, setChatStarted] = useState(false);
-
-  // ── Auto-scroll ref ────────────────────────────────────────────
-  // This attaches to an invisible div at the bottom of the message list.
-  // Every time messages update, we scroll to it automatically.
   const bottomRef = useRef(null);
-
   const isMobile = useIsMobile();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // ── Close sidebar when clicking outside ───────────────────────
-  // If sidebar is open and user clicks the main content area,
-  // close the sidebar automatically.
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (sidebarOpen && !e.target.closest('#sidebar') && !e.target.closest('#menu-btn')) {
@@ -60,39 +31,22 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [sidebarOpen]);
 
-  // ── Send Message ───────────────────────────────────────────────
   const handleSendMessage = async (question) => {
     if (!question.trim() || isLoading) return;
-
-    // Switch from welcome screen to chat view
     setChatStarted(true);
-
-    // Close sidebar if open
     setSidebarOpen(false);
-
-    // Add user message to the list immediately
-    // User sees their message appear before FastAPI responds
-    setMessages(prev => [...prev, {
-      role: 'user',
-      content: question,
-    }]);
-
+    setMessages(prev => [...prev, { role: 'user', content: question }]);
     setIsLoading(true);
 
     try {
       const data = await sendMessage(question, SESSION_ID);
-
-      // Add assistant response to message list
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.answer,
         sources: data.sources,
-        question: question, // stored so feedback knows which question this answer belongs to
+        question: question,
       }]);
-
     } catch (error) {
-      // If FastAPI is unreachable or returns an error,
-      // show a friendly error message instead of crashing
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: 'Unable to reach the server. Make sure the FastAPI backend is running on port 8000.',
@@ -100,34 +54,29 @@ export default function Home() {
         question: question,
       }]);
     } finally {
-      // Always runs — whether success or error
       setIsLoading(false);
     }
   };
 
-  // ── New Conversation ───────────────────────────────────────────
   const handleNewConversation = async () => {
-
     if (messages.length > 0) {
       await clearSession(SESSION_ID);
     }
-    // Reset all local state back to welcome screen
     setMessages([]);
     setChatStarted(false);
     setSidebarOpen(false);
   };
 
-  // ── Render ─────────────────────────────────────────────────────
   return (
     <div style={{
       display: 'flex',
       height: '100vh',
+      height: '100dvh', // dynamic viewport height — accounts for mobile browser bars
       overflow: 'hidden',
       background: 'var(--bg-base)',
       position: 'relative',
     }}>
-
-      {/* ── Sidebar overlay (dark backdrop when sidebar is open) ── */}
+      {/* Sidebar overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -141,7 +90,7 @@ export default function Home() {
         />
       )}
 
-      {/* ── Sidebar (slides in from left) ── */}
+      {/* Sidebar */}
       <div id="sidebar">
         <Sidebar
           isOpen={sidebarOpen}
@@ -152,7 +101,7 @@ export default function Home() {
         />
       </div>
 
-      {/* ── Main content area ── */}
+      {/* Main content */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -160,26 +109,25 @@ export default function Home() {
         overflow: 'hidden',
         position: 'relative',
       }}>
-
-        {/* ── Navbar ── */}
+        {/* Navbar */}
         <nav style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '18px 32px',
+          padding: isMobile ? '14px 16px' : '18px 32px',
           borderBottom: '1px solid var(--border-dim)',
           background: 'rgba(8,5,17,0.8)',
           backdropFilter: 'blur(12px)',
           zIndex: 10,
           flexShrink: 0,
         }}>
-          {/* Hamburger menu button */}
+          {/* Hamburger */}
           <button
             id="menu-btn"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             style={{
-              width: '38px',
-              height: '38px',
+              width: isMobile ? '34px' : '38px',
+              height: isMobile ? '34px' : '38px',
               borderRadius: '10px',
               border: '1px solid var(--purple-border)',
               background: 'var(--purple-muted)',
@@ -198,7 +146,6 @@ export default function Home() {
                 background: 'rgba(255,255,255,0.7)',
                 borderRadius: '1px',
                 display: 'block',
-                // Animate top and bottom lines to form an X when open
                 transform: sidebarOpen
                   ? i === 0 ? 'rotate(45deg) translate(4px,4px)'
                   : i === 2 ? 'rotate(-45deg) translate(4px,-4px)'
@@ -210,13 +157,13 @@ export default function Home() {
             ))}
           </button>
 
-          {/* Logo — click to start a new conversation */}
+          {/* Logo */}
           <button
             onClick={handleNewConversation}
             aria-label="Start a new conversation"
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '20px',
+              fontSize: isMobile ? '18px' : '20px',
               fontWeight: '700',
               color: '#fff',
               letterSpacing: '-0.3px',
@@ -242,32 +189,31 @@ export default function Home() {
             NU<span style={{ color: 'var(--gold)' }}>Guide</span>
           </button>
 
-          {/* Status indicator (green/red dot) */}
           <StatusIndicator />
         </nav>
 
-        {/* ── Page body — switches between welcome and chat ── */}
+        {/* Page body */}
         {!chatStarted ? (
 
-          // ── WELCOME SCREEN ────────────────────────────────────
+          // WELCOME SCREEN
           <div style={{
             flex: 1,
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: isMobile ? '0 16px 32px' : '0 24px 40px',
+            padding: isMobile ? '0 14px 24px' : '0 24px 40px',
             position: 'relative',
+            WebkitOverflowScrolling: 'touch', // smooth scroll on iOS
           }}>
-
-            {/* Background glow effect */}
+            {/* Background glow */}
             <div style={{
               position: 'absolute',
               top: 0,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '700px',
-              height: '400px',
+              width: isMobile ? '400px' : '700px',
+              height: isMobile ? '250px' : '400px',
               background: 'radial-gradient(ellipse at center top, rgba(124,58,237,0.25) 0%, rgba(124,58,237,0.06) 50%, transparent 70%)',
               pointerEvents: 'none',
             }}/>
@@ -275,10 +221,11 @@ export default function Home() {
             {/* Hero text */}
             <div style={{
               textAlign: 'center',
-              marginTop: isMobile ? '32px' : '64px',
-              marginBottom: '40px',
+              marginTop: isMobile ? '20px' : '64px',
+              marginBottom: isMobile ? '24px' : '40px',
               animation: 'fade-up 0.6s ease forwards',
               position: 'relative',
+              padding: isMobile ? '0 4px' : '0',
             }}>
               {/* Pill badge */}
               <div style={{
@@ -288,10 +235,10 @@ export default function Home() {
                 background: 'rgba(124,58,237,0.12)',
                 border: '1px solid rgba(124,58,237,0.3)',
                 borderRadius: '20px',
-                padding: '5px 14px',
-                fontSize: '11px',
+                padding: isMobile ? '4px 12px' : '5px 14px',
+                fontSize: isMobile ? '10px' : '11px',
                 color: '#A78BCA',
-                marginBottom: '24px',
+                marginBottom: isMobile ? '16px' : '24px',
                 letterSpacing: '0.06em',
               }}>
                 <span style={{
@@ -302,17 +249,17 @@ export default function Home() {
                   animation: 'pulse-glow 2s ease infinite',
                   display: 'inline-block',
                 }}/>
-                Niagara University · Admissions Office
+                Niagara University · Admissions
               </div>
 
-              {/* Main heading */}
+              {/* Heading */}
               <h1 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(36px, 5vw, 56px)',
+                fontSize: isMobile ? 'clamp(28px, 8vw, 36px)' : 'clamp(36px, 5vw, 56px)',
                 fontWeight: '700',
                 color: '#fff',
                 lineHeight: '1.1',
-                marginBottom: '16px',
+                marginBottom: isMobile ? '12px' : '16px',
                 letterSpacing: '-1px',
               }}>
                 Your Tour Guide<br/>
@@ -321,7 +268,7 @@ export default function Home() {
 
               {/* Subheading */}
               <p style={{
-                fontSize: '15px',
+                fontSize: isMobile ? '13px' : '15px',
                 color: 'var(--text-muted)',
                 maxWidth: '420px',
                 margin: '0 auto',
@@ -333,11 +280,11 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Search input on welcome screen */}
+            {/* Search input */}
             <div style={{
               width: '100%',
-              maxWidth: '580px',
-              marginBottom: '12px',
+              maxWidth: isMobile ? '100%' : '580px',
+              marginBottom: isMobile ? '8px' : '12px',
               animation: 'fade-up 0.6s ease 0.1s forwards',
             }}>
               <ChatInput
@@ -348,28 +295,32 @@ export default function Home() {
               />
             </div>
 
-            <p style={{
-              fontSize: '11px',
-              color: 'var(--text-subtle)',
-              marginBottom: '48px',
-              animation: 'fade-up 0.6s ease 0.15s forwards',
-            }}>
-              Press Enter to send · Shift+Enter for new line
-            </p>
+            {/* Hint text */}
+            {!isMobile && (
+              <p style={{
+                fontSize: '11px',
+                color: 'var(--text-subtle)',
+                marginBottom: '48px',
+                animation: 'fade-up 0.6s ease 0.15s forwards',
+              }}>
+                Press Enter to send · Shift+Enter for new line
+              </p>
+            )}
 
             {/* Category cards */}
             <div style={{
               width: '100%',
               maxWidth: '900px',
+              marginTop: isMobile ? '8px' : '0',
               animation: 'fade-up 0.6s ease 0.2s forwards',
             }}>
               <p style={{
-                fontSize: '11px',
+                fontSize: isMobile ? '10px' : '11px',
                 color: 'var(--text-subtle)',
                 textAlign: 'center',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                marginBottom: '16px',
+                marginBottom: isMobile ? '12px' : '16px',
               }}>
                 Explore by category
               </p>
@@ -377,7 +328,7 @@ export default function Home() {
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-                gap: '14px',
+                gap: isMobile ? '10px' : '14px',
               }}>
                 {CATEGORY_CARDS.map((card) => (
                   <button
@@ -386,8 +337,8 @@ export default function Home() {
                     style={{
                       background: card.gradient,
                       border: `1px solid ${card.border}`,
-                      borderRadius: '16px',
-                      padding: '22px 18px',
+                      borderRadius: isMobile ? '12px' : '16px',
+                      padding: isMobile ? '16px 12px' : '22px 18px',
                       textAlign: 'left',
                       cursor: 'pointer',
                       position: 'relative',
@@ -396,47 +347,48 @@ export default function Home() {
                     }}
                     onMouseEnter={e => {
                       e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.4)`;
+                      e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)';
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    {/* Arrow icon top right */}
+                    {/* Arrow icon */}
                     <span style={{
                       position: 'absolute',
-                      top: '14px',
-                      right: '14px',
-                      fontSize: '14px',
+                      top: isMobile ? '10px' : '14px',
+                      right: isMobile ? '10px' : '14px',
+                      fontSize: isMobile ? '12px' : '14px',
                       color: 'rgba(255,255,255,0.3)',
                     }}>↗</span>
 
-                    {/* Category icon */}
+                    {/* Icon */}
                     <span style={{
-                      fontSize: '24px',
+                      fontSize: isMobile ? '20px' : '24px',
                       display: 'block',
-                      marginBottom: '12px',
+                      marginBottom: isMobile ? '8px' : '12px',
                     }}>
                       {card.icon}
                     </span>
 
-                    {/* Card title */}
+                    {/* Title */}
                     <div style={{
-                      fontSize: '13px',
+                      fontSize: isMobile ? '12px' : '13px',
                       fontWeight: '600',
                       color: '#fff',
-                      marginBottom: '6px',
+                      marginBottom: '4px',
                       letterSpacing: '0.02em',
+                      lineHeight: '1.3',
                     }}>
                       {card.title}
                     </div>
 
-                    {/* Card subtitle */}
+                    {/* Subtitle */}
                     <div style={{
-                      fontSize: '11px',
+                      fontSize: isMobile ? '10px' : '11px',
                       color: 'rgba(255,255,255,0.4)',
-                      lineHeight: '1.5',
+                      lineHeight: '1.4',
                     }}>
                       {card.subtitle}
                     </div>
@@ -444,12 +396,12 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Starter questions below cards */}
+              {/* Starter questions */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                gap: '10px',
-                marginTop: '14px',
+                gap: isMobile ? '8px' : '10px',
+                marginTop: isMobile ? '10px' : '14px',
               }}>
                 {STARTER_QUESTIONS.map(({ icon, text }) => (
                   <button
@@ -458,13 +410,13 @@ export default function Home() {
                     style={{
                       background: 'rgba(255,255,255,0.03)',
                       border: '1px solid rgba(124,58,237,0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
+                      borderRadius: isMobile ? '10px' : '12px',
+                      padding: isMobile ? '12px 14px' : '14px 16px',
                       textAlign: 'left',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'flex-start',
-                      gap: '10px',
+                      gap: isMobile ? '8px' : '10px',
                       transition: 'border-color 0.2s ease, background 0.2s ease',
                     }}
                     onMouseEnter={e => {
@@ -476,9 +428,9 @@ export default function Home() {
                       e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
                     }}
                   >
-                    <span style={{ fontSize: '16px', flexShrink: 0 }}>{icon}</span>
+                    <span style={{ fontSize: isMobile ? '14px' : '16px', flexShrink: 0 }}>{icon}</span>
                     <span style={{
-                      fontSize: '12px',
+                      fontSize: isMobile ? '11px' : '12px',
                       color: 'rgba(255,255,255,0.5)',
                       lineHeight: '1.5',
                     }}>
@@ -492,7 +444,7 @@ export default function Home() {
 
         ) : (
 
-          // ── CHAT VIEW ─────────────────────────────────────────
+          // CHAT VIEW
           <ChatWindow
             messages={messages}
             isLoading={isLoading}
@@ -501,9 +453,14 @@ export default function Home() {
           />
         )}
 
-        {/* ── Chat input — only shows in active chat view ── */}
+        {/* Chat input in active chat */}
         {chatStarted && (
-          <div style={{ flexShrink: 0, padding: isMobile ? '0 12px 16px' : '0 24px 20px', }}>
+          <div style={{
+            flexShrink: 0,
+            padding: isMobile ? '0 10px 8px' : '0 24px 20px',
+            // Safe area for iPhones with home indicator bar
+            paddingBottom: isMobile ? 'max(8px, env(safe-area-inset-bottom))' : '20px',
+          }}>
             <ChatInput
               onSend={handleSendMessage}
               isLoading={isLoading}

@@ -8,7 +8,7 @@
   padding: 0;
 }
 
-/* Base */ 
+/* Base */
 html {
   font-size: 16px;
 }
@@ -20,6 +20,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Prevent iOS bounce scroll on the body */
+  overscroll-behavior: none;
 }
 
 /* Scroll Bar */
@@ -36,38 +38,45 @@ body {
 /* Design Tokens */
 
 :root {
-  --bg-base: #0808511;
+  /* FIXED: was #0808511 (extra digit) */
+  --bg-base: #080511;
   --bg-surface: #12091E;
   --bg-card: #0F0820;
-  --purple-vivid:#7C3AED;
-  --purple-light:#9333EA;
-  --purple-muted:rgba(124, 58, 237, 0.15);
-  --purple-border:rgba(124, 58, 237, 0.25);
-  --gold:#D4A017;
-  --gold-light:#F5C518;
-  --text-primary:#FFFFFF;
-  --text-muted:rgba(255, 255, 255, 0.45);
-  --text-subtle:rgba(255, 255, 255, 0.25);
-  --border-dim:rgba(124, 58, 237, 0.15);
+  --purple-vivid: #7C3AED;
+  --purple-light: #9333EA;
+  --purple-muted: rgba(124, 58, 237, 0.15);
+  --purple-border: rgba(124, 58, 237, 0.25);
+  --gold: #D4A017;
+  --gold-light: #F5C518;
+  --text-primary: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-subtle: rgba(255, 255, 255, 0.25);
+  --border-dim: rgba(124, 58, 237, 0.15);
   --font-display: 'Playfair Display', serif;
   --font-body: 'Inter', sans-serif;
+
+  /* Safe area insets for iPhones with notch/home bar */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Typogrophy Helpers */
+/* Typography Helpers */
 .font-display {
   font-family: var(--font-display);
 }
 
-/* Glow animation */
+/* Animations */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.6; }
-  50% {opacity: 1;}
+  50% { opacity: 1; }
 }
 
-/* Fade in animation */
 @keyframes fade-up {
   from {
     opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -76,20 +85,42 @@ body {
   animation: fade-up 0.5s ease forwards;
 }
 
-/* card hover lif */
 @keyframes card-lift {
-  to {transform:translateY(-4px); }
+  to { transform: translateY(-4px); }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* Typing bounce for TypingIndicator */
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
 textarea::placeholder {
   color: rgba(255, 255, 255, 0.2);
 }
 
+/* Mobile: prevent text size adjustment on rotation */
 @media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent pull-to-refresh on mobile Chrome */
+  body {
+    overscroll-behavior-y: contain;
+  }
+
   .desktop-only {
     display: none !important;
   }

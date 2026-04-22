@@ -1,79 +1,64 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useWindowSize';
 
 export default function ChatInput({ onSend, isLoading, placeholder, large }) {
-
-  // useRef gives us direct access to the textarea DOM element
-  // We need this to manually control its height and focus
   const textareaRef = useRef(null);
+  const isMobile = useIsMobile();
 
-  // Auto-focus the input when the component first appears
   useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+    // Don't auto-focus on mobile — it pops up the keyboard immediately
+    // which is annoying on the welcome screen
+    if (!isMobile) {
+      textareaRef.current?.focus();
+    }
+  }, [isMobile]);
 
-  // ── Auto-resize handler ──────────────────────────────────────
-  // Called every time the user types
-  // Resets height to 'auto' first so it can shrink when text is deleted
-  // Then sets it to the scroll height so it grows to fit the content
-  // Max height of 140px prevents it from taking over the screen
   const handleInput = (e) => {
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
   };
 
-  // ── Send handler ─────────────────────────────────────────────
   const handleSend = () => {
     const value = textareaRef.current?.value.trim();
     if (!value || isLoading) return;
-
     onSend(value);
-
-    // Clear the input and reset its height after sending
     textareaRef.current.value = '';
     textareaRef.current.style.height = 'auto';
   };
 
-  // ── Keyboard handler ─────────────────────────────────────────
-  // Enter sends the message
-  // Shift+Enter adds a new line (default textarea behavior)
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // stops the default Enter newline behavior
+      e.preventDefault();
       handleSend();
     }
   };
 
-  // ── Size variants ────────────────────────────────────────────
-  // large=true is used on the welcome screen (bigger, more prominent)
-  // large=false (default) is used in the active chat view
-  const containerPadding = large ? '18px 20px' : '14px 20px';
-  const textareaSize = large ? '15px' : '14px';
+  const containerPadding = large
+    ? (isMobile ? '14px 14px' : '18px 20px')
+    : (isMobile ? '10px 12px' : '14px 20px');
+
+  const textareaSize = large
+    ? (isMobile ? '14px' : '15px')
+    : '14px';
 
   return (
     <div style={{
-      padding: large ? '0' : '12px 24px 20px',
-      background: large ? 'transparent' : 'transparent',
+      padding: large ? '0' : (isMobile ? '8px 0 12px' : '12px 24px 20px'),
+      background: 'transparent',
     }}>
-      {/* Input wrapper — the visible rounded container */}
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
-        gap: '12px',
+        gap: isMobile ? '8px' : '12px',
         background: 'rgba(255,255,255,0.04)',
         border: '1px solid rgba(124,58,237,0.3)',
-        borderRadius: large ? '16px' : '16px',
+        borderRadius: large ? '14px' : '14px',
         padding: containerPadding,
         transition: 'border-color 0.2s ease, background 0.2s ease',
-        // Focus-within applies styles when any child is focused
-        // This makes the whole container highlight when typing
-      }}
-      onFocus={() => {}}
-      onBlur={() => {}}
-      >
-        {/* Textarea */}
+      }}>
         <textarea
           ref={textareaRef}
           onInput={handleInput}
@@ -96,23 +81,21 @@ export default function ChatInput({ onSend, isLoading, placeholder, large }) {
             fontWeight: '300',
             maxHeight: '140px',
             overflowY: 'auto',
-            // Placeholder color via CSS — can't be done inline in React
           }}
         />
 
-        {/* Send button */}
         <button
           onClick={handleSend}
           disabled={isLoading}
           title="Send message"
           style={{
-            width: '36px',
-            height: '36px',
+            width: isMobile ? '34px' : '36px',
+            height: isMobile ? '34px' : '36px',
             borderRadius: '10px',
             border: 'none',
             background: isLoading
-              ? 'rgba(124,58,237,0.2)'           // dimmed when loading
-              : 'linear-gradient(135deg, #7C3AED, #9333EA)', // vivid when ready
+              ? 'rgba(124,58,237,0.2)'
+              : 'linear-gradient(135deg, #7C3AED, #9333EA)',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -121,27 +104,19 @@ export default function ChatInput({ onSend, isLoading, placeholder, large }) {
             transition: 'background 0.2s ease, transform 0.1s ease',
           }}
           onMouseEnter={e => {
-            if (!isLoading) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
+            if (!isLoading) e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseLeave={e => {
             e.currentTarget.style.transform = 'scale(1)';
           }}
           onMouseDown={e => {
-            if (!isLoading) {
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }
+            if (!isLoading) e.currentTarget.style.transform = 'scale(0.95)';
           }}
           onMouseUp={e => {
-            if (!isLoading) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
+            if (!isLoading) e.currentTarget.style.transform = 'scale(1.05)';
           }}
         >
-          {/* Send arrow icon — built with pure CSS border trick */}
           {isLoading ? (
-            // Spinning circle when loading
             <div style={{
               width: '14px',
               height: '14px',
@@ -151,7 +126,6 @@ export default function ChatInput({ onSend, isLoading, placeholder, large }) {
               animation: 'spin 0.8s linear infinite',
             }}/>
           ) : (
-            // Arrow icon when ready
             <svg
               width="16"
               height="16"
@@ -169,8 +143,8 @@ export default function ChatInput({ onSend, isLoading, placeholder, large }) {
         </button>
       </div>
 
-      {/* Hint text — only shown in chat view, not welcome screen */}
-      {!large && (
+      {/* Hide hint text on mobile — wastes space, mobile users know how Enter works */}
+      {!large && !isMobile && (
         <p style={{
           fontSize: '11px',
           color: 'var(--text-subtle)',
