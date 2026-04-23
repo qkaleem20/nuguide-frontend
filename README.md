@@ -2,9 +2,7 @@
 
 The frontend interface for NUGuide, an AI-powered chatbot built for Niagara University's admissions tour guides. Built with Next.js and React, featuring a dark-themed design system with real-time chat, source citations, and feedback collection.
 
-## Screenshots
-
-> Screenshots coming soon
+**Live:** [www.nuguide.info](https://www.nuguide.info)
 
 ## Features
 
@@ -66,7 +64,7 @@ lib/
 ### Installation
 
 ```bash
-git clone https://github.com/[username]/nuguide-frontend.git
+git clone https://github.com/qkaleem20/nuguide-backend.git
 cd nuguide-frontend
 npm install
 ```
@@ -95,7 +93,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Backend
 
-The companion backend repository is available at [github.com/[username]/nuguide-backend](https://github.com/[username]/nuguide-backend).
+The companion backend repository is available at [github.com/qkaleem20/nuguide-frontend](https://github.com/qkaleem20/nuguide-frontend)
 
 ## License
 
